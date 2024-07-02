@@ -14,6 +14,7 @@
         - DrawCube()
         - DrawCircle()
         - DrawSphere()
+        - DrawPyramid()
         - DrawCFrame()
         - DrawText()
         - DrawRaycast()
@@ -187,6 +188,20 @@ local function drawSphere(pos : Vector3 | CFrame, radius : number)
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.zAxis)
 end
 
+local function drawPyramid(pos : Vector3 | CFrame, size : number, height : number)
+    local cf = if typeof(pos) == 'Vector3' then CFrame.new(pos) else pos
+    local hsize = size/2
+    local points = {
+        cf * Vector3.new( hsize, 0,  hsize),
+        cf * Vector3.new(-hsize, 0,  hsize),
+        cf * Vector3.new(-hsize, 0, -hsize),
+        cf * Vector3.new( hsize, 0, -hsize),
+        cf * Vector3.new(0, height, 0),
+    }
+    gizmos:AddPath({points[1], points[2], points[3], points[4], points[1], points[5], points[2]}, false)
+    gizmos:AddPath({points[3], points[5], points[4]}, false)
+end
+
 local function drawPath(points : {Vector3}, closed : boolean?, dotsSize : number?)
     closed = closed or false
     dotsSize = dotsSize or 0
@@ -200,12 +215,14 @@ end
 
 local function drawCFrame(cf : CFrame, size : number)
     size = size or 0.5
+    local color3 = gizmos.Color3
     setColor('red')
     drawRay(cf.Position, cf.RightVector * size)
     setColor('green')
     drawRay(cf.Position, cf.UpVector * size)
     setColor('blue')
     drawRay(cf.Position, -cf.LookVector * size)
+    gizmos.Color3 = color3
 end
 
 local function drawText(position : Vector3, text : string, size : number?)
@@ -323,6 +340,12 @@ end
 function module:DrawSphere(position : Vector3 | CFrame, radius : number)
     table.insert(commands, function()
         drawSphere(position, radius)
+    end)
+end
+
+function module:DrawPyramid(position : Vector3 | CFrame, size : number, height : number)
+    table.insert(commands, function()
+        drawPyramid(position, size, height)
     end)
 end
 
