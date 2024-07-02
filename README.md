@@ -1,5 +1,5 @@
-# RobloxGizmos
-Roblox plugin to easily draw Gizmos and debug draw shapes and text.
+# Roblox Gizmos
+Roblox module script to easily draw Gizmos and debug shapes and text.
 
 ![Screenshot](Screenshot.png)
 
@@ -14,7 +14,7 @@ local Gizmos = require(game.ReplicatedStorage.Gizmos)
 Gizmos:DrawSphere(Vector3.zero, 1)
 ```
 
-Note: Gizmos by default are in "_immediate_" mode, meaning that they will clear after drawing each frame. You should draw Gizmos by a callback like `Runservice.Stepped`, which happens every frame:
+Note: Gizmos by default are in "_immediate_" mode, meaning that they will clear after drawing each frame. You should draw Gizmos in a callback like `Runservice.Stepped`, which happens every frame:
 ```lua
 game:GetService('RunService').Stepped:Connect(function()
   Gizmos:DrawSphere(Vector3.zero, 1)
