@@ -180,7 +180,7 @@ local function drawCircle(pos : Vector3, radius : number, normal : Vector3?)
     gizmos:AddPath(points, true)
 end
 
-local function drawSphere(pos : Vector3 | CFrame, radius : Vector3)
+local function drawSphere(pos : Vector3 | CFrame, radius : number)
     local cf = if typeof(pos) == 'Vector3' then CFrame.new(pos) else pos
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.xAxis)
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.yAxis)
@@ -320,7 +320,7 @@ function module:DrawCircle(position : Vector3, radius : number, normal : Vector3
     end)
 end
 
-function module:DrawSphere(position : Vector3 | CFrame, radius : Vector3)
+function module:DrawSphere(position : Vector3 | CFrame, radius : number)
     table.insert(commands, function()
         drawSphere(position, radius)
     end)
