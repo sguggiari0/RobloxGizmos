@@ -1,5 +1,5 @@
-# RobloxGizmos
-Roblox plugin to easily draw Gizmos and debug draw shapes and text.
+# Roblox Gizmos
+Roblox module script to easily draw Gizmos and debug shapes and text.
 
 ![Screenshot](Screenshot.png)
 
