@@ -14,7 +14,7 @@ local Gizmos = require(game.ReplicatedStorage.Gizmos)
 Gizmos:DrawSphere(Vector3.zero, 1)
 ```
 
-Note: Gizmos by default are in "_immediate_" mode, meaning that they will clear after drawing each frame. You should draw Gizmos by a callback like `Runservice.Stepped`, which happens every frame:
+Note: Gizmos by default are in "_immediate_" mode, meaning that they will clear after drawing each frame. You should draw Gizmos in a callback like `Runservice.Stepped`, which happens every frame:
 ```lua
 game:GetService('RunService').Stepped:Connect(function()
   Gizmos:DrawSphere(Vector3.zero, 1)
