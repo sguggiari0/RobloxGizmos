@@ -1,6 +1,10 @@
 # RobloxGizmos
 Roblox plugin to easily draw Gizmos and debug draw shapes and text.
 
+![Screenshot](Screenshot.png)
+
+Especially useful to visualize Vector3s, CFrames, points, forces, raycasts and paths during development. Can also be used in experiences.
+Extremely performant as it uses a single `WireframeHandleAdornment` and not multiple Instances. The functions can be called from anywhere.
 
 ## Instructions:
 - place `Gizmos.lua` as a module script anywhere in your project, for example under `ReplicatedStorage`
