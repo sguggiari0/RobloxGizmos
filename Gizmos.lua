@@ -42,11 +42,11 @@ local colors = {
     yellow  = Color3.new(1, 1, 0),
     cyan    = Color3.new(0, 1, 1),
     magenta = Color3.new(1, 0, 1),
-    white   = Color3.new(1, 1, 1),
-    black   = Color3.new(0, 0, 0),
     orange  = Color3.new(1, 0.5, 0),
     purple  = Color3.new(0.5, 0, 1),
+    white   = Color3.new(1, 1, 1),
     gray    = Color3.new(0.5, 0.5, 0.5),
+    black   = Color3.new(0, 0, 0),
 }
 
 function findOrMakeGizmos()
@@ -214,7 +214,7 @@ local function drawPath(points : {Vector3}, closed : boolean?, dotsSize : number
 end
 
 local function drawCFrame(cf : CFrame, size : number)
-    size = size or 0.5
+    size = size or 1
     local color3 = gizmos.Color3
     setColor('red')
     drawRay(cf.Position, cf.RightVector * size)
