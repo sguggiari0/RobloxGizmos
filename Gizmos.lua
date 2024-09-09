@@ -417,15 +417,35 @@ function Update(t, dt)
     commands = {}
 end
 
-function Test()
-    module:SetColor('red')
-    module:DrawLine(Vector3.zero, Vector3.yAxis)
-    module:DrawRay(Vector3.xAxis * 2, Vector3.yAxis)
-    module:DrawPoint(Vector3.xAxis * 4)
-    module:SetColor('blue')
-    module:DrawCube(Vector3.new(6, 2, 0), Vector3.new(1, 2, 3))
-    module:DrawSphere(Vector3.xAxis * 8, 0.5)
-    module:DrawCircle(Vector3.new(10, 1, 0), 1, Vector3.yAxis)
+function module:Test()
+    local p = Vector3.new(0, 0, 10)
+    local function n() p += Vector3.xAxis*2 end
+    module:SetColor('white')
+
+    module:DrawLine(p, p+Vector3.yAxis) n()
+    module:DrawRay(p, Vector3.yAxis) n()
+    module:DrawPath({ p+Vector3.new(-0.3,0,-0.3), p+Vector3.new(0.4,0,0), p+Vector3.new(0.1,0,0.5), p+Vector3.new(0.6,0,0.9)}) n()
+    module:DrawPoint(p) n()
+    module:DrawCube(p+Vector3.yAxis*0.5, Vector3.one) n()
+    module:DrawCircle(p, 0.5) n()
+    module:DrawSphere(p+Vector3.yAxis*0.5, 0.5) n()
+    module:DrawPyramid(p, 1, 1) n()
+    module:DrawCFrame(CFrame.new(p)) n()
+    module:DrawText(p, 'Hello') n()
+    module:DrawRaycast(p, Vector3.zAxis, nil) n()
+    module:DrawSpherecast(p, 0.3, Vector3.zAxis, nil) n()
+    module:DrawBlockcast(CFrame.new(p), Vector3.one*0.6, Vector3.zAxis, nil) n()
+    --module:AddToPath()
+
+    module:Log('Log')
+
+    local colors = {'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta', 'black', 'gray', 'white'}
+    p = Vector3.new(0, 0, 12)
+    for _, color in ipairs(colors) do
+        module:SetColor(color)
+        module:DrawCircle(p, 0.15)
+        p += Vector3.xAxis*1
+    end
 end
 
 game:GetService('RunService').Stepped:Connect(Update)
