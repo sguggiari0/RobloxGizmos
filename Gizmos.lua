@@ -67,7 +67,7 @@ function findOrMakeLabel()
     if not localPlayer then return end
     label = localPlayer:FindFirstChild('TextLabelGizmos', true)
     if not label then
-        local playerGui = localPlayer:WaitForChild('PlayerGui')
+        local playerGui = localPlayer:WaitForChild('PlayerGui', 3)
         if not playerGui then return end
         local screengui = Instance.new('ScreenGui', playerGui)
         screengui.Name = 'ScreenGuiGizmos'
@@ -116,6 +116,10 @@ end
 local function setColor(color : string | Color3)
     local color3 = if typeof(color) == 'string' then colors[color] else color
     gizmos.Color3 = color3
+end
+
+local function setTransparency(value: number)
+    gizmos.Transparency = value
 end
 
 local function drawLine(from : Vector3, to : Vector3)
@@ -301,6 +305,12 @@ function module:SetColor(color : string | Color3)
     end)
 end
 
+function module:SetTransparency(value: number)
+    table.insert(commands, function()
+        setTransparency(value)
+    end)
+end
+
 function module:DrawLine(from : Vector3, to : Vector3)
     table.insert(commands, function()
         drawLine(from, to)
@@ -399,7 +409,7 @@ end
 ----------------------------------------------
 
 findOrMakeGizmos()
-findOrMakeLabel()
+--findOrMakeLabel()
 
 function Update(t, dt)
     if t ~= gizmos:GetAttribute('lastUpdateTime') then
@@ -411,6 +421,14 @@ function Update(t, dt)
             end
         end
     end
+    for _, command in ipairs(commands) do
+        command()
+    end
+    commands = {}
+end
+
+function module:ForceUpdate()
+    gizmos:Clear()
     for _, command in ipairs(commands) do
         command()
     end
