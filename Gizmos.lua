@@ -62,14 +62,25 @@ function findOrMakeGizmos()
     end
 end
 
-function findOrMakeLabel()
+local function getGui()
     local localPlayer = game:GetService('Players').LocalPlayer
-    if not localPlayer then return end
-    label = localPlayer:FindFirstChild('TextLabelGizmos', true)
+    if localPlayer then
+        -- client
+        local gui = localPlayer:WaitForChild('PlayerGui', 3)
+        return gui
+    else
+        -- TODO: get a gui somehow on the server
+        --local gui = game:GetService('CoreGui')
+        return nil
+    end
+end
+
+function findOrMakeLabel()
+    local gui = getGui()
+    if not gui then return end
+    label = gui:FindFirstChild('TextLabelGizmos', true)
     if not label then
-        local playerGui = localPlayer:WaitForChild('PlayerGui', 3)
-        if not playerGui then return end
-        local screengui = Instance.new('ScreenGui', playerGui)
+        local screengui = Instance.new('ScreenGui', gui)
         screengui.Name = 'ScreenGuiGizmos'
         label = Instance.new('TextLabel', screengui)
         label.Name = 'TextLabelGizmos'
@@ -217,23 +228,26 @@ local function drawPath(points : {Vector3}, closed : boolean?, dotsSize : number
     end
 end
 
-local function drawCFrame(cf : CFrame, size : number)
+local function drawCFrame(cf : CFrame, size : number, color: Color3)
     size = size or 1
     local color3 = gizmos.Color3
-    setColor('red')
-    drawRay(cf.Position, cf.RightVector * size)
-    setColor('green')
-    drawRay(cf.Position, cf.UpVector * size)
-    setColor('blue')
-    drawRay(cf.Position, -cf.LookVector * size)
+    if color ~= nil then
+        setColor(color)
+        drawRay(cf.Position, cf.RightVector * size)
+        drawRay(cf.Position, cf.UpVector * size)
+        drawRay(cf.Position, -cf.LookVector * size)
+    else
+        setColor('red')
+        drawRay(cf.Position, cf.RightVector * size)
+        setColor('green')
+        drawRay(cf.Position, cf.UpVector * size)
+        setColor('blue')
+        drawRay(cf.Position, -cf.LookVector * size)
+    end
     gizmos.Color3 = color3
 end
 
-local function drawText(position : Vector3, text : string, size : number?)
-    gizmos:AddText(position, text, size)
-end
-
-local function log(...)
+local function formatText(...)
     local args = {...}
     local text = ''
     for _, v in ipairs(args) do
@@ -251,9 +265,22 @@ local function log(...)
         else
             str = tostring(v)
         end
-        text = text .. str
+        text = text .. ' ' .. str
     end
+    return text
+end
+
+local function drawText(position : Vector3, ...)
+    local args = {...}
+    local text = formatText(unpack(args))
+    local size = nil
+    gizmos:AddText(position, text, size)
+end
+
+local function log(...)
     if label then
+        local args = {...}
+        local text = formatText(unpack(args))
         label.Text = label.Text .. '\n' .. text
     end
 end
@@ -359,15 +386,16 @@ function module:DrawPyramid(position : Vector3 | CFrame, size : number, height :
     end)
 end
 
-function module:DrawCFrame(cf : CFrame, size : number?)
+function module:DrawCFrame(cf : CFrame, size : number?, color : Color3?)
     table.insert(commands, function()
-        drawCFrame(cf, size)
+        drawCFrame(cf, size, color)
     end)
 end
 
-function module:DrawText(position : Vector3, text : string, size : number?)
+function module:DrawText(position : Vector3, ...)--text : string, size : number?)
+    local args = {...}
     table.insert(commands, function()
-        drawText(position, text, size)
+        drawText(position, unpack(args))
     end)
 end
 
@@ -409,7 +437,7 @@ end
 ----------------------------------------------
 
 findOrMakeGizmos()
---findOrMakeLabel()
+findOrMakeLabel()
 
 function Update(t, dt)
     if t ~= gizmos:GetAttribute('lastUpdateTime') then
