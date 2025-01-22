@@ -7,6 +7,7 @@
 
     Supports:
         - SetColor()
+        - SetTransparency()
         - DrawLine()
         - DrawRay()
         - DrawPath()
@@ -26,8 +27,8 @@
 
 local module = {}
 
-local gizmos : WireframeHandleAdornment = nil
-local label : TextLabel = nil
+local gizmos: WireframeHandleAdornment = nil
+local label: TextLabel = nil
 local commands = {}
 local trailers = {}
 
@@ -64,14 +65,10 @@ end
 
 local function getGui()
     local localPlayer = game:GetService('Players').LocalPlayer
-    if localPlayer then
-        -- client
-        local gui = localPlayer:WaitForChild('PlayerGui', 3)
-        return gui
-    else
-        -- TODO: get a gui somehow on the server
-        local gui = game:GetService('StarterGui')
-        return gui
+    if localPlayer then -- client
+        return localPlayer:WaitForChild('PlayerGui', 3)
+    else -- server
+        return game:GetService('StarterGui')
     end
 end
 
@@ -124,7 +121,7 @@ end
 
 ------------------------------------- PRIVATE
 
-local function setColor(color : string | Color3)
+local function setColor(color: string | Color3)
     local color3 = if typeof(color) == 'string' then colors[color] else color
     gizmos.Color3 = color3
 end
@@ -133,16 +130,16 @@ local function setTransparency(value: number)
     gizmos.Transparency = value
 end
 
-local function drawLine(from : Vector3, to : Vector3)
+local function drawLine(from: Vector3, to: Vector3)
     gizmos:AddLine(from, to)
 end
 
-local function drawRay(origin : Vector3, direction : Vector3)
+local function drawRay(origin: Vector3, direction: Vector3)
     gizmos:AddLine(origin, origin + direction)
     -- TODO: Draw arrow?
 end
 
-local function drawPoint(pos : Vector3, size : number?)
+local function drawPoint(pos: Vector3, size: number?)
     size = size or 0.1
     gizmos:AddLines({
         pos - Vector3.xAxis * size, pos + Vector3.xAxis * size, 
@@ -150,7 +147,7 @@ local function drawPoint(pos : Vector3, size : number?)
         pos - Vector3.zAxis * size, pos + Vector3.zAxis * size})
 end
 
-local function drawCube(pos : Vector3 | CFrame, size : Vector3)
+local function drawCube(pos: Vector3 | CFrame, size: Vector3)
     local cf = if typeof(pos) == 'Vector3' then CFrame.new(pos) else pos
     local halfSize = size * 0.5
     local min = -halfSize
@@ -181,7 +178,7 @@ local function drawCube(pos : Vector3 | CFrame, size : Vector3)
     })
 end
 
-local function drawCircle(pos : Vector3, radius : number, normal : Vector3?)
+local function drawCircle(pos: Vector3, radius: number, normal: Vector3?)
     local segments = 12
     normal = normal or Vector3.yAxis
     local cf = CFrame.lookAlong(pos, normal)
@@ -196,14 +193,14 @@ local function drawCircle(pos : Vector3, radius : number, normal : Vector3?)
     gizmos:AddPath(points, true)
 end
 
-local function drawSphere(pos : Vector3 | CFrame, radius : number)
+local function drawSphere(pos: Vector3 | CFrame, radius: number)
     local cf = if typeof(pos) == 'Vector3' then CFrame.new(pos) else pos
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.xAxis)
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.yAxis)
     drawCircle(cf.Position, radius, cf.Rotation * Vector3.zAxis)
 end
 
-local function drawPyramid(pos : Vector3 | CFrame, size : number, height : number)
+local function drawPyramid(pos: Vector3 | CFrame, size: number, height: number)
     local cf = if typeof(pos) == 'Vector3' then CFrame.new(pos) else pos
     local hsize = size/2
     local points = {
@@ -217,7 +214,7 @@ local function drawPyramid(pos : Vector3 | CFrame, size : number, height : numbe
     gizmos:AddPath({points[3], points[5], points[4]}, false)
 end
 
-local function drawPath(points : {Vector3}, closed : boolean?, dotsSize : number?)
+local function drawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
     closed = closed or false
     dotsSize = dotsSize or 0
     gizmos:AddPath(points, closed)
@@ -228,7 +225,7 @@ local function drawPath(points : {Vector3}, closed : boolean?, dotsSize : number
     end
 end
 
-local function drawCFrame(cf : CFrame, size : number, color: Color3)
+local function drawCFrame(cf: CFrame, size: number, color: Color3)
     size = size or 1
     local color3 = gizmos.Color3
     if color ~= nil then
@@ -261,7 +258,8 @@ local function formatText(...)
         elseif typeof(v) == 'CFrame' then
             local rx,ry,rz = v:ToOrientation()
             rx, ry, rz = math.deg(rx), math.deg(ry), math.deg(rz)
-            str = string.format("pos=(%.3f, %.3f, %.3f) rot=(%.3f, %.3f, %.3f)", v.p.x, v.p.y, v.p.z, rx, ry, rz)
+            local pos = v.Position
+            str = string.format("pos=(%.3f, %.3f, %.3f) rot=(%.3f, %.3f, %.3f)", pos.x, pos.y, pos.z, rx, ry, rz)
         else
             str = tostring(v)
         end
@@ -270,7 +268,7 @@ local function formatText(...)
     return text
 end
 
-local function drawText(position : Vector3, ...)
+local function drawText(position: Vector3, ...) -- size: number
     local args = {...}
     local text = formatText(unpack(args))
     local size = nil
@@ -285,12 +283,12 @@ local function log(...)
     end
 end
 
-function drawHit(hit : RaycastResult)
+function drawHit(hit: RaycastResult)
     drawCircle(hit.Position, 0.15, hit.Normal)
     drawRay(hit.Position, hit.Normal * 0.3)
 end
 
-function drawRaycastHelper(cf : CFrame, direction : Vector3, result : RaycastResult, shape : number, size : number | Vector3)
+function drawRaycastHelper(cf: CFrame, direction: Vector3, result: RaycastResult, shape: number, size: number | Vector3)
     local color3 = gizmos.Color3
     local travel
     if result then
@@ -312,21 +310,21 @@ function drawRaycastHelper(cf : CFrame, direction : Vector3, result : RaycastRes
     gizmos.Color3 = color3
 end
 
-function drawRaycast(origin : Vector3, direction : Vector3, result : RaycastResult)
+function drawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
     drawRaycastHelper(CFrame.new(origin), direction, result, 0)
 end
 
-function drawSpherecast(origin : Vector3, radius : number, direction : Vector3, result : RaycastResult)
+function drawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
     drawRaycastHelper(CFrame.lookAlong(origin, direction), direction, result, 1, radius)
 end
 
-function drawBlockcast(cf : CFrame, size : Vector3, direction : Vector3, result : RaycastResult)
+function drawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
     drawRaycastHelper(cf, direction, result, 2, size)
 end
 
 ------------------------------------- PUBLIC
 
-function module:SetColor(color : string | Color3)
+function module:SetColor(color: string | Color3)
     table.insert(commands, function()
         setColor(color)
     end)
@@ -338,61 +336,61 @@ function module:SetTransparency(value: number)
     end)
 end
 
-function module:DrawLine(from : Vector3, to : Vector3)
+function module:DrawLine(from: Vector3, to: Vector3)
     table.insert(commands, function()
         drawLine(from, to)
     end)
 end
 
-function module:DrawRay(origin : Vector3, direction : Vector3)
+function module:DrawRay(origin: Vector3, direction: Vector3)
     table.insert(commands, function()
         drawRay(origin, direction)
     end)
 end
 
-function module:DrawPath(points : {Vector3}, closed : boolean?, dotsSize : number?)
+function module:DrawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
     table.insert(commands, function()
         drawPath(points, closed, dotsSize)
     end)
 end
 
-function module:DrawPoint(position : Vector3, size : number?)
+function module:DrawPoint(position: Vector3, size: number?)
     table.insert(commands, function()
         drawPoint(position, size)
     end)
 end
 
-function module:DrawCube(position : Vector3 | CFrame, size : Vector3)
+function module:DrawCube(position: Vector3 | CFrame, size: Vector3)
     table.insert(commands, function()
         drawCube(position, size)
     end)
 end
 
-function module:DrawCircle(position : Vector3, radius : number, normal : Vector3?)
+function module:DrawCircle(position: Vector3, radius: number, normal: Vector3?)
     table.insert(commands, function()
         drawCircle(position, radius, normal)
     end)
 end
 
-function module:DrawSphere(position : Vector3 | CFrame, radius : number)
+function module:DrawSphere(position: Vector3 | CFrame, radius: number)
     table.insert(commands, function()
         drawSphere(position, radius)
     end)
 end
 
-function module:DrawPyramid(position : Vector3 | CFrame, size : number, height : number)
+function module:DrawPyramid(position: Vector3 | CFrame, size: number, height: number)
     table.insert(commands, function()
         drawPyramid(position, size, height)
     end)
 end
 
-function module:DrawCFrame(cf : CFrame, size : number?, color : Color3?)
+function module:DrawCFrame(cf: CFrame, size: number?, color: Color3?)
     table.insert(commands, function()
         drawCFrame(cf, size, color)
     end)
 end
 
-function module:DrawText(position : Vector3, ...)--text : string, size : number?)
+function module:DrawText(position: Vector3, ...) -- text: string, size: number?)
     local args = {...}
     table.insert(commands, function()
         drawText(position, unpack(args))
@@ -406,25 +404,25 @@ function module:Log(...)
     end)
 end
 
-function module:DrawRaycast(origin : Vector3, direction : Vector3, result : RaycastResult)
+function module:DrawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawRaycast(origin, direction, result)
     end)
 end
 
-function module:DrawSpherecast(origin : Vector3, radius : number, direction : Vector3, result : RaycastResult)
+function module:DrawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawSpherecast(origin, radius, direction, result)
     end)
 end
 
-function module:DrawBlockcast(cf : CFrame, size : Vector3, direction : Vector3, result : RaycastResult)
+function module:DrawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawBlockcast(cf, size, direction, result)
     end)
 end
 
-function module:AddToPath(name : string, position : Vector3, dotsSize : number?)
+function module:AddToPath(name: string, position: Vector3, dotsSize: number?)
     if not trailers[name] then
         trailers[name] = Trailer.new()
     end
