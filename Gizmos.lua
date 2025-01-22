@@ -70,8 +70,8 @@ local function getGui()
         return gui
     else
         -- TODO: get a gui somehow on the server
-        --local gui = game:GetService('CoreGui')
-        return nil
+        local gui = game:GetService('StarterGui')
+        return gui
     end
 end
 
@@ -456,7 +456,11 @@ function Update(t, dt)
 end
 
 function module:ForceUpdate()
+    --print('ForceUpdate')
     gizmos:Clear()
+    if label then
+        label.Text = ''
+    end
     for _, command in ipairs(commands) do
         command()
     end
@@ -494,6 +498,11 @@ function module:Test()
     end
 end
 
-game:GetService('RunService').Stepped:Connect(Update)
+local RunService = game:GetService("RunService")
+if RunService:IsRunning() then
+    --print('Binding')
+    RunService:BindToRenderStep('name', Enum.RenderPriority.Camera.Value-1, Update)
+    --RunService.Stepped:Connect(Update)
+end
 
 return module
