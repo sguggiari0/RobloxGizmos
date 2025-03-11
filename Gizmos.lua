@@ -134,9 +134,27 @@ local function drawLine(from: Vector3, to: Vector3)
     gizmos:AddLine(from, to)
 end
 
+local function getPerpendicularVector(v: Vector3): Vector3
+    local perp: Vector3 = Vector3.new(-v.y, v.x, 0)
+    if perp.Magnitude == 0 then
+        perp = Vector3.new(0, -v.z, v.y)
+    end
+    return perp.Unit
+end
+
 local function drawRay(origin: Vector3, direction: Vector3)
-    gizmos:AddLine(origin, origin + direction)
-    -- TODO: Draw arrow?
+    local endPoint = origin + direction
+    gizmos:AddLine(origin, endPoint)
+    
+    -- Draw arrow head
+    local arrowLength, arrowAngle = direction.Magnitude/20, math.rad(30)
+    
+    local dir = direction.Unit
+    local perp = getPerpendicularVector(dir)
+    local left  = endPoint - dir * arrowLength + perp * arrowLength * math.tan(arrowAngle)
+    local right = endPoint - dir * arrowLength - perp * arrowLength * math.tan(arrowAngle)
+    gizmos:AddLine(endPoint, left)
+    gizmos:AddLine(endPoint, right)
 end
 
 local function drawPoint(pos: Vector3, size: number?)
@@ -228,18 +246,19 @@ end
 local function drawCFrame(cf: CFrame, size: number, color: Color3)
     size = size or 1
     local color3 = gizmos.Color3
+    local pos = cf.Position
     if color ~= nil then
         setColor(color)
-        drawRay(cf.Position, cf.RightVector * size)
-        drawRay(cf.Position, cf.UpVector * size)
-        drawRay(cf.Position, -cf.LookVector * size)
+        drawLine(pos, pos + cf.RightVector * size)
+        drawLine(pos, pos + cf.UpVector * size)
+        drawLine(pos, pos + -cf.LookVector * size)
     else
         setColor('red')
-        drawRay(cf.Position, cf.RightVector * size)
+        drawLine(pos, pos + cf.RightVector * size)
         setColor('green')
-        drawRay(cf.Position, cf.UpVector * size)
+        drawLine(pos, pos + cf.UpVector * size)
         setColor('blue')
-        drawRay(cf.Position, -cf.LookVector * size)
+        drawLine(pos, pos + -cf.LookVector * size)
     end
     gizmos.Color3 = color3
 end
