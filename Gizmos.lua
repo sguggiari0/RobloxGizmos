@@ -25,7 +25,7 @@
         - Log()
 ]]
 
-local module = {}
+local Gizmos = {}
 
 local gizmos: WireframeHandleAdornment = nil
 local label: TextLabel = nil
@@ -34,7 +34,7 @@ local trailers = {}
 
 local hitColor, missColor = 'green', 'red'
 
-module.Clear = true
+Gizmos.Clear = true
 
 local colors = {
     red     = Color3.new(1, 0, 0),
@@ -50,7 +50,7 @@ local colors = {
     black   = Color3.new(0, 0, 0),
 }
 
-function findOrMakeGizmos()
+local function findOrMakeGizmos()
     gizmos = gizmos or workspace:FindFirstChild('Gizmos')
     if not gizmos then
         gizmos = Instance.new('WireframeHandleAdornment')
@@ -63,7 +63,7 @@ function findOrMakeGizmos()
     end
 end
 
-local function getGui()
+local function helper_getGui()
     local localPlayer = game:GetService('Players').LocalPlayer
     if localPlayer then -- client
         return localPlayer:WaitForChild('PlayerGui', 3)
@@ -72,8 +72,8 @@ local function getGui()
     end
 end
 
-function findOrMakeLabel()
-    local gui = getGui()
+local function findOrMakeLabel()
+    local gui = helper_getGui()
     if not gui then return end
     label = gui:FindFirstChild('TextLabelGizmos', true)
     if not label then
@@ -134,7 +134,7 @@ local function drawLine(from: Vector3, to: Vector3)
     gizmos:AddLine(from, to)
 end
 
-local function getPerpendicularVector(v: Vector3): Vector3
+local function helper_getPerpendicularVector(v: Vector3): Vector3
     local perp: Vector3 = Vector3.new(-v.y, v.x, 0)
     if perp.Magnitude == 0 then
         perp = Vector3.new(0, -v.z, v.y)
@@ -150,11 +150,22 @@ local function drawRay(origin: Vector3, direction: Vector3)
     local arrowLength, arrowAngle = direction.Magnitude/20, math.rad(30)
     
     local dir = direction.Unit
-    local perp = getPerpendicularVector(dir)
+    local perp = helper_getPerpendicularVector(dir)
     local left  = endPoint - dir * arrowLength + perp * arrowLength * math.tan(arrowAngle)
     local right = endPoint - dir * arrowLength - perp * arrowLength * math.tan(arrowAngle)
     gizmos:AddLine(endPoint, left)
     gizmos:AddLine(endPoint, right)
+end
+
+local function drawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
+    closed = closed or false
+    dotsSize = dotsSize or 0
+    gizmos:AddPath(points, closed)
+    if dotsSize > 0 then
+        for _, point in ipairs(points) do
+            drawCube(point, Vector3.one * dotsSize)
+        end
+    end
 end
 
 local function drawPoint(pos: Vector3, size: number?)
@@ -232,17 +243,6 @@ local function drawPyramid(pos: Vector3 | CFrame, size: number, height: number)
     gizmos:AddPath({points[3], points[5], points[4]}, false)
 end
 
-local function drawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
-    closed = closed or false
-    dotsSize = dotsSize or 0
-    gizmos:AddPath(points, closed)
-    if dotsSize > 0 then
-        for _, point in ipairs(points) do
-            drawCube(point, Vector3.one * dotsSize)
-        end
-    end
-end
-
 local function drawCFrame(cf: CFrame, size: number, color: Color3)
     size = size or 1
     local color3 = gizmos.Color3
@@ -263,7 +263,7 @@ local function drawCFrame(cf: CFrame, size: number, color: Color3)
     gizmos.Color3 = color3
 end
 
-local function formatText(...)
+local function helper_formatText(...)
     local args = {...}
     local text = ''
     for _, v in ipairs(args) do
@@ -271,14 +271,14 @@ local function formatText(...)
         if typeof(v) == 'string' then
             str = v
         elseif typeof(v) == 'number' then
-            str = string.format("%.3f", v)
+            str = string.format('%.3f', v)
         elseif typeof(v) == 'Vector3' then
-            str = string.format("(%.3f, %.3f, %.3f)", v.x, v.y, v.z)
+            str = string.format('(%.3f, %.3f, %.3f)', v.x, v.y, v.z)
         elseif typeof(v) == 'CFrame' then
             local rx,ry,rz = v:ToOrientation()
             rx, ry, rz = math.deg(rx), math.deg(ry), math.deg(rz)
             local pos = v.Position
-            str = string.format("pos=(%.3f, %.3f, %.3f) rot=(%.3f, %.3f, %.3f)", pos.x, pos.y, pos.z, rx, ry, rz)
+            str = string.format('pos=(%.3f, %.3f, %.3f) rot=(%.3f, %.3f, %.3f)', pos.x, pos.y, pos.z, rx, ry, rz)
         else
             str = tostring(v)
         end
@@ -289,7 +289,7 @@ end
 
 local function drawText(position: Vector3, ...) -- size: number
     local args = {...}
-    local text = formatText(unpack(args))
+    local text = helper_formatText(unpack(args))
     local size = nil
     gizmos:AddText(position, text, size)
 end
@@ -297,23 +297,23 @@ end
 local function log(...)
     if label then
         local args = {...}
-        local text = formatText(unpack(args))
+        local text = helper_formatText(unpack(args))
         label.Text = label.Text .. '\n' .. text
     end
 end
 
-function drawHit(hit: RaycastResult)
+local function helper_drawHit(hit: RaycastResult)
     drawCircle(hit.Position, 0.15, hit.Normal)
     drawRay(hit.Position, hit.Normal * 0.3)
 end
 
-function drawRaycastHelper(cf: CFrame, direction: Vector3, result: RaycastResult, shape: number, size: number | Vector3)
+local function helper_drawRaycast(cf: CFrame, direction: Vector3, result: RaycastResult, shape: number, size: number | Vector3)
     local color3 = gizmos.Color3
     local travel
     if result then
         setColor(hitColor)
         travel = direction.Unit * result.Distance
-        drawHit(result)
+        helper_drawHit(result)
     else
         setColor(missColor)
         travel = direction
@@ -329,119 +329,119 @@ function drawRaycastHelper(cf: CFrame, direction: Vector3, result: RaycastResult
     gizmos.Color3 = color3
 end
 
-function drawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
-    drawRaycastHelper(CFrame.new(origin), direction, result, 0)
+local function drawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
+    helper_drawRaycast(CFrame.new(origin), direction, result, 0)
 end
 
-function drawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
-    drawRaycastHelper(CFrame.lookAlong(origin, direction), direction, result, 1, radius)
+local function drawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
+    helper_drawRaycast(CFrame.lookAlong(origin, direction), direction, result, 1, radius)
 end
 
-function drawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
-    drawRaycastHelper(cf, direction, result, 2, size)
+local function drawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
+    helper_drawRaycast(cf, direction, result, 2, size)
 end
 
 ------------------------------------- PUBLIC
 
-function module:SetColor(color: string | Color3)
+function Gizmos:SetColor(color: string | Color3)
     table.insert(commands, function()
         setColor(color)
     end)
 end
 
-function module:SetTransparency(value: number)
+function Gizmos:SetTransparency(value: number)
     table.insert(commands, function()
         setTransparency(value)
     end)
 end
 
-function module:DrawLine(from: Vector3, to: Vector3)
+function Gizmos:DrawLine(from: Vector3, to: Vector3)
     table.insert(commands, function()
         drawLine(from, to)
     end)
 end
 
-function module:DrawRay(origin: Vector3, direction: Vector3)
+function Gizmos:DrawRay(origin: Vector3, direction: Vector3)
     table.insert(commands, function()
         drawRay(origin, direction)
     end)
 end
 
-function module:DrawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
+function Gizmos:DrawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
     table.insert(commands, function()
         drawPath(points, closed, dotsSize)
     end)
 end
 
-function module:DrawPoint(position: Vector3, size: number?)
+function Gizmos:DrawPoint(position: Vector3, size: number?)
     table.insert(commands, function()
         drawPoint(position, size)
     end)
 end
 
-function module:DrawCube(position: Vector3 | CFrame, size: Vector3)
+function Gizmos:DrawCube(position: Vector3 | CFrame, size: Vector3)
     table.insert(commands, function()
         drawCube(position, size)
     end)
 end
 
-function module:DrawCircle(position: Vector3, radius: number, normal: Vector3?)
+function Gizmos:DrawCircle(position: Vector3, radius: number, normal: Vector3?)
     table.insert(commands, function()
         drawCircle(position, radius, normal)
     end)
 end
 
-function module:DrawSphere(position: Vector3 | CFrame, radius: number)
+function Gizmos:DrawSphere(position: Vector3 | CFrame, radius: number)
     table.insert(commands, function()
         drawSphere(position, radius)
     end)
 end
 
-function module:DrawPyramid(position: Vector3 | CFrame, size: number, height: number)
+function Gizmos:DrawPyramid(position: Vector3 | CFrame, size: number, height: number)
     table.insert(commands, function()
         drawPyramid(position, size, height)
     end)
 end
 
-function module:DrawCFrame(cf: CFrame, size: number?, color: Color3?)
+function Gizmos:DrawCFrame(cf: CFrame, size: number?, color: Color3?)
     table.insert(commands, function()
         drawCFrame(cf, size, color)
     end)
 end
 
-function module:DrawText(position: Vector3, ...) -- text: string, size: number?)
+function Gizmos:DrawText(position: Vector3, ...) -- text: string, size: number?)
     local args = {...}
     table.insert(commands, function()
         drawText(position, unpack(args))
     end)
 end
 
-function module:Log(...)
+function Gizmos:Log(...)
     local args = {...}
     table.insert(commands, function()
         log(unpack(args))
     end)
 end
 
-function module:DrawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
+function Gizmos:DrawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawRaycast(origin, direction, result)
     end)
 end
 
-function module:DrawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
+function Gizmos:DrawSpherecast(origin: Vector3, radius: number, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawSpherecast(origin, radius, direction, result)
     end)
 end
 
-function module:DrawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
+function Gizmos:DrawBlockcast(cf: CFrame, size: Vector3, direction: Vector3, result: RaycastResult)
     table.insert(commands, function()
         drawBlockcast(cf, size, direction, result)
     end)
 end
 
-function module:AddToPath(name: string, position: Vector3, dotsSize: number?)
+function Gizmos:AddToPath(name: string, position: Vector3, dotsSize: number?)
     if not trailers[name] then
         trailers[name] = Trailer.new()
     end
@@ -456,10 +456,10 @@ end
 findOrMakeGizmos()
 findOrMakeLabel()
 
-function Update(t, dt)
+local function Update(t, dt)
     if t ~= gizmos:GetAttribute('lastUpdateTime') then
         gizmos:SetAttribute('lastUpdateTime', t)
-        if module.Clear then
+        if Gizmos.Clear then
             gizmos:Clear()
             if label then
                 label.Text = ''
@@ -472,8 +472,7 @@ function Update(t, dt)
     commands = {}
 end
 
-function module:ForceUpdate()
-    --print('ForceUpdate')
+function Gizmos:ForceUpdate()
     gizmos:Clear()
     if label then
         label.Text = ''
@@ -484,42 +483,41 @@ function module:ForceUpdate()
     commands = {}
 end
 
-function module:Test()
+function Gizmos:Test()
     local p = Vector3.new(0, 0, 10)
     local function n() p += Vector3.xAxis*2 end
-    module:SetColor('white')
 
-    module:DrawLine(p, p+Vector3.yAxis) n()
-    module:DrawRay(p, Vector3.yAxis) n()
-    module:DrawPath({ p+Vector3.new(-0.3,0,-0.3), p+Vector3.new(0.4,0,0), p+Vector3.new(0.1,0,0.5), p+Vector3.new(0.6,0,0.9)}) n()
-    module:DrawPoint(p) n()
-    module:DrawCube(p+Vector3.yAxis*0.5, Vector3.one) n()
-    module:DrawCircle(p, 0.5) n()
-    module:DrawSphere(p+Vector3.yAxis*0.5, 0.5) n()
-    module:DrawPyramid(p, 1, 1) n()
-    module:DrawCFrame(CFrame.new(p)) n()
-    module:DrawText(p, 'Hello') n()
-    module:DrawRaycast(p, Vector3.zAxis, nil) n()
-    module:DrawSpherecast(p, 0.3, Vector3.zAxis, nil) n()
-    module:DrawBlockcast(CFrame.new(p), Vector3.one*0.6, Vector3.zAxis, nil) n()
-    --module:AddToPath()
-
-    module:Log('Log')
+    -- all API
+    Gizmos:SetColor('white')
+    Gizmos:SetTransparency(0)
+    Gizmos:DrawLine(p, p+Vector3.yAxis) n()
+    Gizmos:DrawRay(p, Vector3.yAxis) n()
+    Gizmos:DrawPath({ p+Vector3.new(-0.3,0,-0.3), p+Vector3.new(0.4,0,0), p+Vector3.new(0.1,0,0.5), p+Vector3.new(0.6,0,0.9)}) n()
+    Gizmos:DrawPoint(p) n()
+    Gizmos:DrawCube(p+Vector3.yAxis*0.5, Vector3.one) n()
+    Gizmos:DrawCircle(p, 0.5) n()
+    Gizmos:DrawSphere(p+Vector3.yAxis*0.5, 0.5) n()
+    Gizmos:DrawPyramid(p, 1, 1) n()
+    Gizmos:DrawCFrame(CFrame.new(p)) n()
+    Gizmos:DrawText(p, 'Hello') n()
+    Gizmos:DrawRaycast(p, Vector3.zAxis, nil) n()
+    Gizmos:DrawSpherecast(p, 0.3, Vector3.zAxis, nil) n()
+    Gizmos:DrawBlockcast(CFrame.new(p), Vector3.one*0.6, Vector3.zAxis, nil) n()
+    --Gizmos:AddToPath()
+    Gizmos:Log('Log')
 
     local colors = {'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta', 'black', 'gray', 'white'}
     p = Vector3.new(0, 0, 12)
     for _, color in ipairs(colors) do
-        module:SetColor(color)
-        module:DrawCircle(p, 0.15)
+        Gizmos:SetColor(color)
+        Gizmos:DrawCircle(p, 0.15)
         p += Vector3.xAxis*1
     end
 end
 
-local RunService = game:GetService("RunService")
+local RunService = game:GetService('RunService')
 if RunService:IsRunning() then
-    --print('Binding')
     RunService:BindToRenderStep('name', Enum.RenderPriority.Camera.Value-1, Update)
-    --RunService.Stepped:Connect(Update)
 end
 
-return module
+return Gizmos
