@@ -31,6 +31,7 @@ Gizmos:DrawSphere(Vector3.zero, 1)
 The following methods are currently supported by the module:
 ```lua
 Gizmos:SetColor(color : string | Color3)
+Gizmos:SetTransparency(value: number)
 Gizmos:DrawLine(from : Vector3, to : Vector3)
 Gizmos:DrawRay(origin : Vector3, direction : Vector3)
 Gizmos:DrawPath(points : {Vector3}, closed : boolean?, dotsSize : number?)
