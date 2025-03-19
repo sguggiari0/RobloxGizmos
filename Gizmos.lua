@@ -27,7 +27,7 @@
 
 local Gizmos = {}
 
-local gizmos: WireframeHandleAdornment = nil
+local wfh: WireframeHandleAdornment = nil
 local label: TextLabel = nil
 local commands = {}
 local trailers = {}
@@ -51,15 +51,15 @@ local colors = {
 }
 
 local function findOrMakeGizmos()
-    gizmos = gizmos or workspace:FindFirstChild('Gizmos')
-    if not gizmos then
-        gizmos = Instance.new('WireframeHandleAdornment')
-        gizmos.Name = 'Gizmos'
-        gizmos.Parent = workspace
+    wfh = wfh or workspace:FindFirstChild('Gizmos')
+    if not wfh then
+        wfh = Instance.new('WireframeHandleAdornment')
+        wfh.Name = 'Gizmos'
+        wfh.Parent = workspace
         assert(workspace.WorldPivot:FuzzyEq(CFrame.identity), 'workspace is expected to have identity CFrame')
-        gizmos.Color3 = Color3.new(1, 1, 1)
-        gizmos.Adornee = workspace
-        gizmos.AlwaysOnTop = true
+        wfh.Color3 = Color3.new(1, 1, 1)
+        wfh.Adornee = workspace
+        wfh.AlwaysOnTop = true
     end
 end
 
@@ -123,15 +123,15 @@ end
 
 local function setColor(color: string | Color3)
     local color3 = if typeof(color) == 'string' then colors[color] else color
-    gizmos.Color3 = color3
+    wfh.Color3 = color3
 end
 
 local function setTransparency(value: number)
-    gizmos.Transparency = value
+    wfh.Transparency = value
 end
 
 local function drawLine(from: Vector3, to: Vector3)
-    gizmos:AddLine(from, to)
+    wfh:AddLine(from, to)
 end
 
 local function helper_getPerpendicularVector(v: Vector3): Vector3
@@ -144,7 +144,7 @@ end
 
 local function drawRay(origin: Vector3, direction: Vector3)
     local endPoint = origin + direction
-    gizmos:AddLine(origin, endPoint)
+    wfh:AddLine(origin, endPoint)
     
     -- Draw arrow head
     local arrowLength, arrowAngle = direction.Magnitude/20, math.rad(30)
@@ -153,14 +153,14 @@ local function drawRay(origin: Vector3, direction: Vector3)
     local perp = helper_getPerpendicularVector(dir)
     local left  = endPoint - dir * arrowLength + perp * arrowLength * math.tan(arrowAngle)
     local right = endPoint - dir * arrowLength - perp * arrowLength * math.tan(arrowAngle)
-    gizmos:AddLine(endPoint, left)
-    gizmos:AddLine(endPoint, right)
+    wfh:AddLine(endPoint, left)
+    wfh:AddLine(endPoint, right)
 end
 
 local function drawPath(points: {Vector3}, closed: boolean?, dotsSize: number?)
     closed = closed or false
     dotsSize = dotsSize or 0
-    gizmos:AddPath(points, closed)
+    wfh:AddPath(points, closed)
     if dotsSize > 0 then
         for _, point in ipairs(points) do
             drawCube(point, Vector3.one * dotsSize)
@@ -170,7 +170,7 @@ end
 
 local function drawPoint(pos: Vector3, size: number?)
     size = size or 0.1
-    gizmos:AddLines({
+    wfh:AddLines({
         pos - Vector3.xAxis * size, pos + Vector3.xAxis * size, 
         pos - Vector3.yAxis * size, pos + Vector3.yAxis * size, 
         pos - Vector3.zAxis * size, pos + Vector3.zAxis * size})
@@ -191,7 +191,7 @@ local function drawCube(pos: Vector3 | CFrame, size: Vector3)
         cf * max,
         cf * Vector3.new(min.x, max.y, max.z),
     }
-    gizmos:AddLines({
+    wfh:AddLines({
         v[1], v[2],
         v[2], v[3],
         v[3], v[4],
@@ -208,7 +208,7 @@ local function drawCube(pos: Vector3 | CFrame, size: Vector3)
 end
 
 local function drawCircle(pos: Vector3, radius: number, normal: Vector3?)
-    local segments = 12
+    local segments = 16
     normal = normal or Vector3.yAxis
     local cf = CFrame.lookAlong(pos, normal)
     local angle = 2 * math.pi / segments
@@ -219,7 +219,7 @@ local function drawCircle(pos: Vector3, radius: number, normal: Vector3?)
         local point = cf:PointToWorldSpace(localpoint)
         table.insert(points, point)
     end
-    gizmos:AddPath(points, true)
+    wfh:AddPath(points, true)
 end
 
 local function drawSphere(pos: Vector3 | CFrame, radius: number)
@@ -239,13 +239,13 @@ local function drawPyramid(pos: Vector3 | CFrame, size: number, height: number)
         cf * Vector3.new( hsize, 0, -hsize),
         cf * Vector3.new(0, height, 0),
     }
-    gizmos:AddPath({points[1], points[2], points[3], points[4], points[1], points[5], points[2]}, false)
-    gizmos:AddPath({points[3], points[5], points[4]}, false)
+    wfh:AddPath({points[1], points[2], points[3], points[4], points[1], points[5], points[2]}, false)
+    wfh:AddPath({points[3], points[5], points[4]}, false)
 end
 
 local function drawCFrame(cf: CFrame, size: number, color: Color3)
     size = size or 1
-    local color3 = gizmos.Color3
+    local color3 = wfh.Color3
     local pos = cf.Position
     if color ~= nil then
         setColor(color)
@@ -260,7 +260,7 @@ local function drawCFrame(cf: CFrame, size: number, color: Color3)
         setColor('blue')
         drawLine(pos, pos + -cf.LookVector * size)
     end
-    gizmos.Color3 = color3
+    wfh.Color3 = color3
 end
 
 local function helper_formatText(...)
@@ -291,7 +291,7 @@ local function drawText(position: Vector3, ...) -- size: number
     local args = {...}
     local text = helper_formatText(unpack(args))
     local size = nil
-    gizmos:AddText(position, text, size)
+    wfh:AddText(position, text, size)
 end
 
 local function log(...)
@@ -308,7 +308,7 @@ local function helper_drawHit(hit: RaycastResult)
 end
 
 local function helper_drawRaycast(cf: CFrame, direction: Vector3, result: RaycastResult, shape: number, size: number | Vector3)
-    local color3 = gizmos.Color3
+    local color3 = wfh.Color3
     local travel
     if result then
         setColor(hitColor)
@@ -326,7 +326,7 @@ local function helper_drawRaycast(cf: CFrame, direction: Vector3, result: Raycas
         drawCube(cf + travel, size)
     end
     drawRay(cf.Position, travel)
-    gizmos.Color3 = color3
+    wfh.Color3 = color3
 end
 
 local function drawRaycast(origin: Vector3, direction: Vector3, result: RaycastResult)
@@ -457,10 +457,10 @@ findOrMakeGizmos()
 findOrMakeLabel()
 
 local function Update(t, dt)
-    if t ~= gizmos:GetAttribute('lastUpdateTime') then
-        gizmos:SetAttribute('lastUpdateTime', t)
+    if t ~= wfh:GetAttribute('lastUpdateTime') then
+        wfh:SetAttribute('lastUpdateTime', t)
         if Gizmos.Clear then
-            gizmos:Clear()
+            wfh:Clear()
             if label then
                 label.Text = ''
             end
@@ -473,7 +473,7 @@ local function Update(t, dt)
 end
 
 function Gizmos:ForceUpdate()
-    gizmos:Clear()
+    wfh:Clear()
     if label then
         label.Text = ''
     end
