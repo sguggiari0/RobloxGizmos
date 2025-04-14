@@ -485,24 +485,25 @@ end
 
 function Gizmos:Test()
     local p = Vector3.new(0, 0, 10)
+    local x, y, z = Vector3.xAxis, Vector3.yAxis, Vector3.zAxis
     local function n() p += Vector3.xAxis*2 end
 
     -- all API
     Gizmos:SetColor('white')
     Gizmos:SetTransparency(0)
-    Gizmos:DrawLine(p, p+Vector3.yAxis) n()
-    Gizmos:DrawRay(p, Vector3.yAxis) n()
+    Gizmos:DrawLine(p, p + y) n()
+    Gizmos:DrawRay(p, y) n()
     Gizmos:DrawPath({ p+Vector3.new(-0.3,0,-0.3), p+Vector3.new(0.4,0,0), p+Vector3.new(0.1,0,0.5), p+Vector3.new(0.6,0,0.9)}) n()
     Gizmos:DrawPoint(p) n()
-    Gizmos:DrawCube(p+Vector3.yAxis*0.5, Vector3.one) n()
+    Gizmos:DrawCube(p + y*0.5, Vector3.one) n()
     Gizmos:DrawCircle(p, 0.5) n()
-    Gizmos:DrawSphere(p+Vector3.yAxis*0.5, 0.5) n()
+    Gizmos:DrawSphere(p+y*0.5, 0.5) n()
     Gizmos:DrawPyramid(p, 1, 1) n()
     Gizmos:DrawCFrame(CFrame.new(p)) n()
     Gizmos:DrawText(p, 'Hello') n()
-    Gizmos:DrawRaycast(p, Vector3.zAxis, nil) n()
-    Gizmos:DrawSpherecast(p, 0.3, Vector3.zAxis, nil) n()
-    Gizmos:DrawBlockcast(CFrame.new(p), Vector3.one*0.6, Vector3.zAxis, nil) n()
+    Gizmos:DrawRaycast(p, z, nil) n()
+    Gizmos:DrawSpherecast(p, 0.3, z, nil) n()
+    Gizmos:DrawBlockcast(CFrame.new(p), Vector3.one*0.6, z, nil) n()
     --Gizmos:AddToPath()
     Gizmos:Log('Log')
 
