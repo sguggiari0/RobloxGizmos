@@ -1,5 +1,8 @@
 # Roblox Gizmos
-Roblox module script to easily draw Gizmos and debug shapes and text.
+
+<img src="logo.png" width="128">
+
+Roblox module script to easily draw Gizmos and debug shapes and text. Available also as [plugin](https://create.roblox.com/store/asset/109903121130716/Gizmos-Plugin).
 
 ![Screenshot](Screenshot.png)
 

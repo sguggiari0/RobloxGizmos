@@ -145,10 +145,10 @@ end
 local function drawRay(origin: Vector3, direction: Vector3)
     local endPoint = origin + direction
     wfh:AddLine(origin, endPoint)
-    
+
     -- Draw arrow head
     local arrowLength, arrowAngle = direction.Magnitude/20, math.rad(30)
-    
+
     local dir = direction.Unit
     local perp = helper_getPerpendicularVector(dir)
     local left  = endPoint - dir * arrowLength + perp * arrowLength * math.tan(arrowAngle)
@@ -456,7 +456,8 @@ end
 findOrMakeGizmos()
 findOrMakeLabel()
 
-local function Update(t, dt)
+local function Update(dt)
+    local t = tick()
     if t ~= wfh:GetAttribute('lastUpdateTime') then
         wfh:SetAttribute('lastUpdateTime', t)
         if Gizmos.Clear then
